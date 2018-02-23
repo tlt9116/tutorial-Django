@@ -1,0 +1,151 @@
+Notes for Django framework :
+
+- Creating first App :
+	-  Create starter files that every app has : 
+		- django-admin startproject [name of directory/project]
+		  (creates a directory : website + ...)
+- Create a new sub app : 
+	X:\PYTHON_DEV\django_tuto\mySiteTest>python manage.py startapp webapptest
+
+- Files that you need to edit for an app are : 
+- new website name
+	- file : urls: add in the import section : include
+	- sub app name : url link to sub app urls(ex.: url(r'^music/', include('music.urls'))
+	- sub app file name : urls.py
+		-  import section :
+			from django.conf.urls import url
+			from . import views
+		- link to the views file : 
+			urlpatterns = [url(r'^$', views.index, name='index'),]
+		- views.py file :
+			- import section :
+				from django.http import HttpResponse
+			- Create a method for that view :
+				# Create your views here.
+				def index(request):
+    				return HttpResponse("<h1>This is Music app 									HomePage</h1>")
+- Setup database (sqlite3): 
+	- Synchronization new app with the DB :
+		- :\PYTHON_DEV\django_tuto\website>python manage.py migrate
+		- Result :
+			Performing system checks...
+			System check identified no issues (0 silenced).
+			February 17, 2018 - 08:12:44
+			Django version 1.9, using settings 'website.settings'
+			Starting development server at http://127.0.0.1:8000/
+			Quit the server with CTRL-BREAK.
+-Creating the DB:
+	- file : new app -> models.py
+		- Add classes to create DB tables : 
+		class Album(models.Model):
+    		artist = models.CharField(max_length=250) 
+- Edit the setting.py of the app : 
+	INSTALLED_APPS = [
+    'music.apps.MusicConfig',
+- Activating Models:
+- Synchronization models.py with the DB : 
+X:\PYTHON_DEV\django_tuto\website>python manage.py makemigrations music
+- Result : 
+	Migrations for 'music':
+  0001_initial.py:
+    - Create model Album
+    - Create model Song
+Will create tables in database (to verifiy):
+	BEGIN;
+-- Create model Album
+CREATE TABLE "music_album" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "artist" varchar(250) NOT NULL, "album_title" varchar(
+500) NOT NULL, "genre" varchar(100) NOT NULL, "album_logo" varchar(1000) NOT NULL);
+-- Create model Song
+CREATE TABLE "music_song" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "file_type" varchar(10) NOT NULL, "song_title" varchar(
+250) NOT NULL, "album_id" integer NOT NULL REFERENCES "music_album" ("id"));
+CREATE INDEX "music_song_95c3b9df" ON "music_song" ("album_id");
+
+COMMIT;
+Note if you make any changes to the models; you will need to exit the shell and re-start, before any modifications will be active.
+	- To enter into the Shell: python manage.py shell
+To enter data into a table: 
+	- Instantiate an instance of the class: a = Album()
+	- Use the dot method to assign value to fields : a.song_title = “some song title”
+	- or, all fields at once: alb = Album(artist="Taylor Swift", album_title="Red", genre="Country/Rock", album_logo=http://www.litlepups.net/f855d592ddde96d2.html)
+	- When finish, save to db: a.save()
+	- Exit shell: exit()
+- Make any and all changes to the models:
+- Re-run the django API data shell : python manager.py shell
+	- from db_name.models import table1, table2, …
+	- verify changes made to models
+- Use filters : Table_Name.objects.filter(field_name) – Album.objects.filter(id=1) 
+	- Filter with starts with: table_name.objects.filter(field_name__startswith=’’ - Album.objects.filter(artist__startswith='S')
+
+Admin interface: 
+- Create a superuser for DB : python manager.py createsuperuser
+- Edit the db_name – admin : 
+from django.contrib import admin
+from .models import Album #import the models
+# Register your models here.
+-need to register the table: admin.site.register(Album)   
+Writing another view:
+- Edit App name/urls.py :
+	- from . import views # import the views.py file
+	- add a url pattern: url(r'^(?P<album_id>[0-9]+)/$', views.detail, name='detail'), 
+# r: regular expression,
+ ^: beginning of string,
+P: Named of Capturing Group,
+(): unnamed Capturing Group
+album_id: is the variable of the id of the album
+[0-9]: any single digit between 0 – 9, 
++: repeats single digit 
+/: constant for the end of the string,  
+$: end of string  
+	- Edit App name/views.py :
+		- def name_of_function(request, album_id):
+			request: is an html request
+			album_id: is the variable which has the id of the album
+			
+			return HttpResponse(“<h2>Details for Album ID :” + str(album_id + “</h2>”) 
+			html display
+
+Connecting to the Database:
+	from .models import Album # From the views.py file import models Album
+def index(request):
+	all_albums = Album.objects.all() # connecting to Database Album
+	html = ‘’ # variable for holding each link to each album
+	for album in all_albums:
+        url = '/music/' + str(album.id) + '/'
+        html += '<H2><a href="' + url + '">' + album.album_title + '</a></h2><br>'
+			url: concatenate /music/ + the string of album_id
+			html += … : concatenate the html code with album_id and field : album.album_title  
+def detail(request, album_id):
+   return HttpResponse("<h2>Details for Album Id : " + str(album_id) + "</h2>")
+	
+Template:
+-	from django.template import loader
+	- Create a Directory : from the App directory make s sub-directory : templates
+		- from Directory templates, make a sub-directory : music
+			- Create a file called : index.html(ths will be the home page of the app)
+- From the views.py file, load the index.html : template = loader.get_template(music/index.html)
+- Create a variable : context = {‘all_albums’:all_albums, }
+	Return the template to the script : return HttpResponse(template.render(context, request)	
+
+
+
+ 
+
+
+
+- Boot up the web server : navigate to the new project created : 
+	- make sure the website project and manage.py are in the directory
+	- python manage.py runserver :
+			- output : 
+				Performing system checks...
+				System check identified no issues (0 silenced).
+				You have unapplied migrations; your app may not work properly 				until they are applied.
+				Run 'python manage.py migrate' to apply them.
+				February 16, 2018 - 09:52:43
+				Django version 1.9, using settings 'mySiteTest.settings'
+				Starting development server at http://127.0.0.1:8000/
+				Quit the server with CTRL-BREAK.
+				Not Found: /
+				[16/Feb/2018 09:55:20] "GET / HTTP/1.1" 200 1767
+				Not Found: /favicon.ico
+				[16/Feb/2018 09:55:21] "GET /favicon.ico HTTP/1.1" 404 1940
+

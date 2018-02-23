@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+{% extends 'music/base.html' %}
+{% block body %}
+
+    {% if all_albums %}
+        <h3>Here all the album(s) in the DataBase</h3>
+        <ul>
+            {% for album in all_albums %}
+                <li><a href="{% url 'music:detail' album.id%}">{{album.album_title}}</a> </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h3>Database is empty, please add a Album.</h3>
+    {% endif %}
+{% endblock %}
